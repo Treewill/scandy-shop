@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <title>Candy Shop</title>
+    <style type="text/css">
+      .delete-item-icon {
+        fill: #dc3545
+      }
+      .decrease-item-icon {
+        fill: #dc3545
+      }
+      .increase-item-icon {
+        fill: #28a745
+      }
+      .footer-space {
+        height: calc(1rem + 54px)
+      }
+    </style>
+    <script type="text/javascript">
+      window.addEventListener('load', function() {
+        const binnedItems = {
+          "A01": "Skittles",
+          "A02": "Jolly Rancher",
+          "A03": "Milk Duds",
+          "A04": "Baby Ruth",
+          "A05": "Starburst",
+          "A06": "SweetTarts",
+          "A07": "Bit o Honey",
+          "A08": "Werther's Original",
+          "B01": "Riesen",
+          "B02": "Pop Rocks",
+          "B03": "Crunch",
+          "B04": "Jawbreakers",
+          "B05": "Twizzlers",
+          "B06": "Toblerone",
+          "B07": "Smarties",
+          "B08": "Mr. Goodbar",
+          "C01": "PEZ",
+          "C02": "Blow Pops",
+          "C03": "Almond Joy",
+          "C04": "Sour Patch Kids",
+          "C05": "Atomic Fireball",
+          "C06": "Payday",
+          "C07": "Reese's Pieces",
+          "C08": "Junior Mints",
+          "D01": "Mily Way",
+          "D02": "Cadbury Egg",
+          "D03": "Tootsie Pop",
+          "D04": "York Peppermint Patties",
+          "D05": "Three Musketeers",
+          "D06": "Twix",
+          "D07": "Kit Kat",
+          "D08": "M&Ms",
+          "E01": "Snickers",
+          "E02": "Air Heads",
+          "E03": "Andes Mints",
+          "E04": "Boston Baked Beans",
+          "E05": "Hubba Bubba",
+          "E06": "Charleston Chew",
+          "E07": "Dots",
+          "E08": "Chick-o-Stick",
+          "F01": "Gobstopper",
+          "F02": "Whatchamacallit",
+          "F03": "Fruit Gushers",
+          "F04": "Fun Dip",
+          "F05": "Hot Tamales",
+          "F06": "Goo Goo Cluster",
+          "F07": "Jujyfruits",
+          "F08": "Mounds",
+        };
+      
+        const itemTemplate = document.querySelector('#item-template')
+        function makeItemDisplay() {
+          const element = itemTemplate.content.cloneNode(true)
+          const children = []
+          element.childNodes.forEach(x => children.push(x))
+          return {
+            element,
+            children,
+            nameNode: element.querySelector('.name-node'),
+            binNode: element.querySelector('.bin-node'),
+            countField: element.querySelector('.count-field'),
+            deleteButton: element.querySelector('.delete-button'),
+            increaseButton: element.querySelector('.increase-button'),
+            decreaseButton: element.querySelector('.decrease-button'),
+          }
+        }
+
+        function bindItemToDisplay(item, display) {
+          display.nameNode.textContent = item.name
+          display.binNode.textContent = item.bin
+          display.countField.value = item.count
+          display.increaseButton.addEventListener('click', function() {
+            item.count = item.count + 1
+            display.countField.value = item.count
+          })
+          display.countField.addEventListener('input', function() {
+            const parsed = parseInt(display.countField.value, 10)
+            if (!isNaN(parsed))
+              item.count = parsed
+          })
+          display.decreaseButton.addEventListener('click', function() {
+            item.count = item.count - 1
+            display.countField.value = item.count
+            prepareForScan()
+          })
+          display.data = item
+        }
+
+        const footerTemplate = document.querySelector('#footer-template')
+        function makeFooterDisplay() {
+          const element = footerTemplate.content.cloneNode(true)
+          const children = []
+          element.childNodes.forEach(x => children.push(x))
+          return {
+            element,
+            children,
+            depositButton: element.querySelector('.deposit-button'),
+            deleteButton: element.querySelector('.delete-button'),
+            withdrawButton: element.querySelector('.withdraw-button'),
+          }
+        }
+
+        const createItemTemplate = document.querySelector('#create-item-template')
+        function makeCreateItemDisplay() {
+          const element = createItemTemplate.content.cloneNode(true)
+          const children = []
+          element.childNodes.forEach(x => children.push(x))
+          return {
+            element,
+            children,
+            fieldNode: element.querySelector('.code-field'),
+            buttonNode: element.querySelector('.add-button'),
+          }
+        }
+
+        const itemContainer = document.querySelector('#item-container')
+        const createItemContainer = document.querySelector('#create-item-container')
+        const footerContainer = document.querySelector('#footer-container')
+        let items = []
+        const createItemDisplay = makeCreateItemDisplay()
+        const footerDisplay = makeFooterDisplay()
+
+        function addItemToDisplay(item) {
+          const display = makeItemDisplay()
+          bindItemToDisplay(item, display)
+          itemContainer.appendChild(display.element)
+          return display
+        }
+
+        function addItem(item){
+          const itemDisplay = addItemToDisplay(item)
+          itemDisplay.deleteButton.addEventListener('click',
+              () => deleteItemFromDisplay(itemDisplay))
+          items.push(itemDisplay)
+        }
+
+        function deleteItemFromDisplay(itemDisplay){
+          itemDisplay.children.forEach(
+              child => itemContainer.removeChild(child))
+          items.splice(items.indexOf(itemDisplay), 1)
+        }
+        
+        function clearItems() {
+          items.slice().forEach(itemDisplay => deleteItemFromDisplay(itemDisplay))
+          items = []
+        }
+        
+        function processCode() {
+          const code = createItemDisplay.fieldNode.value
+          if (code in binnedItems) {
+            addItem({name: binnedItems[code], bin: code, count: 1})
+            createItemDisplay.fieldNode.value = ""
+          }
+          createItemContainer.scrollIntoView(true)
+          createItemDisplay.fieldNode.select()
+        }
+
+        createItemContainer.appendChild(createItemDisplay.element)
+        createItemDisplay.buttonNode.addEventListener('click', processCode)
+        createItemDisplay.fieldNode.addEventListener('keyup', function() {
+          if (event.keyCode === 13)
+            processCode()
+        })
+        footerContainer.appendChild(footerDisplay.element)
+        footerDisplay.depositButton.addEventListener('click', clearItems)
+        footerDisplay.deleteButton.addEventListener('click', clearItems)
+        footerDisplay.withdrawButton.addEventListener('click', clearItems)
+      })
+    </script>
+    <template id="item-template">
+      <div class="row no-gutters my-4">
+        <div class="col-12 col-sm-4">
+          <span class="btn btn-light border border-dark delete-button delete-item-icon" height="38px" data-glyphicons="373">
+          </span>
+          <div class="d-inline-block align-middle my-auto name-node"></div>
+        </div>
+        <div class="col-4 col-sm-3 align-middle my-auto">
+          <div class="d-inline-block">Bin:</div>
+          <div class="d-inline-block bin-node"></div>
+        </div>
+        <div class="col-8 col-sm-5">
+          <div class="d-flex justify-content-end">
+            <span class="btn btn-light border border-dark ml-auto decrease-button decrease-item-icon" height="38px" data-glyphicons="372">
+            </span>
+            <input class="form-control d-inline-block text-right mx-1 my-auto count-field" type="text" style="width: 4em"/>
+            <span class="btn btn-light border border-dark increase-button increase-item-icon" height="38px" data-glyphicons="371">
+            </span>
+          </div>
+        </div>
+      </div>
+    </template>
+    <template id="create-item-template">
+      <div class="row my-4">
+        <div class="col">
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text" height="38px" data-glyphicons="539">
+              </span>
+            </div>
+            <input class="form-control code-field" type="text" placeholder="A01"/>
+            <div class="input-group-append">
+              <span class="btn btn-primary add-button" height="38px" data-glyphicons="371">
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+    <template id="footer-template">
+      <div class="container fixed-bottom bg-secondary rounded py-2">
+        <div class="d-flex justify-content-between">
+          <span class="btn btn-light border border-dark deposit-button" height="38px" data-glyphicons="399">
+          </span>
+          <span class="btn btn-danger border border-dark delete-button" height="38px" data-glyphicons="17">
+          </span>
+          <span class="btn btn-light border border-dark withdraw-button" height="38px" data-glyphicons="400">
+          </span>
+        </div>
+      </div>
+    </template>
+  </head>
+  <body>
+    <div id="app-container" class="container mt-2">
+      <div id="item-container">
+      </div>
+      <div id="create-item-container">
+      </div>
+      <div id="footer-container">
+        <div class="footer-space"/>
+      </div>
+    </div>
+  </body>
+</html>
